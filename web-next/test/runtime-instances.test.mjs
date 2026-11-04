@@ -25,6 +25,7 @@ import {
   sessionRuntimeName,
   sessionRuntimeRequestIdentity,
   sessionRuntimeType,
+  suggestedRuntimeInstanceName,
 } from "../src/features/dashboard/runtime-instances.ts"
 
 test("manual deletion removes the instance from the list", () => {
@@ -125,6 +126,27 @@ test("instance availability follows the runtime descriptor policy", () => {
 
   assert.equal(runtimeTypeCanCreateInstance(singleType, []), true)
   assert.equal(runtimeTypeCanCreateInstance(singleType, [configured]), false)
+})
+
+test("a discovered Hermes runtime can be added and displayed without a hard-coded provider list", () => {
+  const [base] = mergeRuntimeTypes([], [legacyRuntime])
+  const hermes = {
+    ...base,
+    runtimeType: "hermes",
+    displayName: "Hermes",
+    present: true,
+    schema: { type: "object", properties: { executablePath: { type: "string" } } },
+    instancePolicy: "single",
+    maxInstances: 1,
+  }
+  assert.deepEqual(addableRuntimeTypes([hermes], []), [hermes])
+  assert.equal(suggestedRuntimeInstanceName(hermes, []), "Hermes")
+  assert.equal(sessionRuntimeName({
+    runtime: "hermes",
+    runtimeId: "hermes",
+    runtimeType: "hermes",
+    runtimeTypeDisplayName: "Hermes",
+  }), "Hermes")
 })
 
 test("creation defaults and required fields come only from the descriptor", () => {

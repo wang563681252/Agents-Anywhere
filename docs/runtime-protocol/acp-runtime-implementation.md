@@ -17,7 +17,7 @@ Web / Desktop / Android / iOS
   → Pi SDK
 ```
 
-默认 Provider 为 Codex、Claude、DSH、Pi。Pi 使用 `runtimeType=pi`、`implementationType=acp-stdio`，ACP 是内部对接协议。通用 `AcpRuntime` 通过注入 `AgentProfile`、启动配置、准备策略复用协调逻辑，其他 Agent 可以有自己的 Provider 身份；默认列表没有单独名为 ACP 的入口。
+默认 Provider 为 Codex、Claude、DSH、Pi、Hermes。Pi 使用 `runtimeType=pi`、`implementationType=acp-stdio`，ACP 是内部对接协议。通用 `AcpRuntime` 通过注入 `AgentProfile`、启动配置、准备策略复用协调逻辑，其他 Agent 可以有自己的 Provider 身份；默认列表没有单独名为 ACP 的入口。
 
 Pi 的 `PiProvider` 直接实现 `RuntimeProvider` 的配置、发现和启动流程，优先复用本机 npm 安装的 Pi SDK，第三方 `@openma/pi-acp` 提供 ACP 入口并在自己的进程内调用该 SDK。
 
@@ -146,6 +146,30 @@ uv run python scripts/verify-acp-processes.py
 ```
 
 实现变更时同步更新本页。
+
+## Hermes 接入与边界
+
+Hermes Provider 使用 `runtimeType=hermes`，从工作设备的 PATH 或配置的绝对
+`executablePath` 启动已有的 `hermes acp` / `hermes-acp`，并先运行 ACP
+依赖检查。它保留本机 Hermes 的模型、认证、工具和记忆配置，不自动安装或
+修改这些配置。运行前需按 [Hermes ACP 文档](https://hermes-agent.nousresearch.com/docs/user-guide/features/acp)
+安装 ACP 依赖。
+
+Hermes 当前通过 ACP 旧版 `models` / `modes` 字段提供模型与编辑审批模式；
+适配器转换为 AA 的会话配置，并将选择交还 Hermes。Hermes 发起的 ACP
+权限请求由现有交互通道处理；其原生审批策略不是 AA 的强制全工具审批
+或操作系统沙箱。
+
+AA 创建的会话可通过 Hermes 的 `session/load` 重新附着到原身份；缺失会话
+明确失败，不使用 Hermes 可能新建替代会话的 `session/resume`。加载时
+保留 AA 已记录的 Timeline 并跳过原生历史回放；异常中断时未被 AA 接收的
+历史不会因此自动补齐，结果未知的消息也不会自动重投。现有 Hermes 原生
+历史暂不导入，附件和斜杠命令目录暂不开放。
+
+受控检查为 `uv run pytest -q tests/test_hermes_acp.py`。如果本机已安装
+Hermes ACP，可将 `AA_HERMES_ACP_TEST_EXECUTABLE` 设为 `hermes-acp` 的
+绝对路径，再运行 `uv run pytest -q tests/test_hermes_installed.py`；该检查
+使用临时 Hermes 配置与本地模型模拟服务，不使用已有模型凭据。
 
 默认 Pi 的直接功能检查为 `PYTHONPATH=connector connector/.venv/bin/python connector/scripts/verify-pi-managed.py --scenario allow`；另有 `deny`、`readonly`、`attachment`、`steer`、`slow`、`reasoning` 和 `interrupt` 场景，使用真实 OpenMA/Pi 包与本地 SSE 模型，不调用付费供应商。
 

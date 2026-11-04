@@ -495,6 +495,10 @@ class RuntimeInstance(AgentRuntime):
         catalog = await self.native_runtime.list_scoped_model_catalog(session_id, query=query, limit=limit)
         return replace(catalog, runtime=self.instance.runtime_type, runtime_id=self.instance.runtime_id)
 
+    async def list_scoped_permission_catalog(self, session_id: str, query: str | None = None, limit: int = 100) -> RuntimePermissionCatalog:
+        catalog = await self.native_runtime.list_scoped_permission_catalog(session_id, query=query, limit=limit)
+        return replace(catalog, runtime=self.instance.runtime_type, runtime_id=self.instance.runtime_id)
+
     async def execute_workflow(self, request: RuntimeWorkflowRequest) -> RuntimeWorkflowResult:
         return await self.native_runtime.execute_workflow(request)
 

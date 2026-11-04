@@ -92,6 +92,11 @@ class AgentRuntime(ABC):
     ) -> RuntimePermissionCatalog:
         raise RuntimeUnsupportedError("list_permission_catalog")
 
+    async def list_scoped_permission_catalog(
+        self, session_id: str, query: str | None = None, limit: int = 100
+    ) -> RuntimePermissionCatalog:
+        return await self.list_permission_catalog(query=query, limit=limit)
+
     async def list_sessions(
         self,
         limit: int = 100,

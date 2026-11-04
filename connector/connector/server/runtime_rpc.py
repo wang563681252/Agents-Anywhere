@@ -222,10 +222,14 @@ class RuntimeRpcHandler:
         if method == "runtime.permissionCatalog":
             runtime = self._resolve_agent_runtime(params)
             parsed = RuntimeCatalogParams.parse(params)
-            catalog = await runtime.list_permission_catalog(
-                query=parsed.query,
-                limit=parsed.limit,
-            )
+            if isinstance(params.get("sessionId"), str):
+                catalog = await runtime.list_scoped_permission_catalog(
+                    params["sessionId"], query=parsed.query, limit=parsed.limit
+                )
+            else:
+                catalog = await runtime.list_permission_catalog(
+                    query=parsed.query, limit=parsed.limit
+                )
             return self._runtime_result(
                 runtime,
                 {"catalog": permission_catalog_payload(catalog)},

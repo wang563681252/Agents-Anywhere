@@ -135,7 +135,7 @@ atomic file transactions and legacy migration.
 
 ## Runtime Discovery
 
-The default providers are Codex, Claude and DSH. The connector reports attached runtime
+The default providers are Codex, Claude, DSH, Pi and Hermes. The connector reports attached runtime
 capabilities to the server. Codex is discovered through the official
 `openai-codex` SDK package for sessions the connector starts itself. In addition,
 the Codex runtime joins the Codex IDE/desktop IPC router at `$CODEX_HOME/ipc/ipc.sock`
@@ -163,7 +163,7 @@ DSH requires the bridge integration described in
 [DSH Bridge Next](../dsh-bridge-next/README.md). Legacy ACP adapters are not part
 of the default provider registry.
 
-Connected sessions expose native slash commands through a live runtime catalog.
+Supported connected sessions expose native slash commands through a live runtime catalog.
 See [runtime slash commands](docs/runtime-commands.md) for Codex commands, DSH
 registry behavior, result states and headless verification.
 
@@ -219,3 +219,19 @@ Pi 通过通用 ACP 适配启动第三方 `@openma/pi-acp` 发布包，并优先
 创建 Pi 实例时默认优先复用本机 Pi 1.4.0 npm 安装的模型、认证和配置，可指定 CLI 路径、配置目录及额外历史目录。未安装或不兼容时明确报错，用户可选择需要模型网关的受管环境；已有受管配置保持隔离。四端可只读浏览原生历史，退出对应 CLI 会话后使用「继续任务」恢复同一原生会话；AA 接手后暂不展示状态卡片及其中的结束执行按钮，恢复与释放能力仍保留，执行实例实际释放后可切回 `pi`。不支持两个独立实例同时写入同一历史。
 
 配置、消息接纳、附件、恢复和其他 ACP 代码的边界见 [ACP Runtime 与 Pi 当前实现](../docs/runtime-protocol/acp-runtime-implementation.md)。
+
+## Hermes Runtime
+
+Hermes 使用工作设备上已有的 Hermes Agent、模型认证和记忆配置，通过
+`hermes acp` 或 `hermes-acp` 连接；安装后先在本机运行 `hermes acp --check`。
+默认从 PATH 发现入口，也可在 Runtime 配置中填写绝对 `executablePath`。
+Connector 不安装 Hermes，也不复制其凭据或记忆。
+
+AA 创建的会话支持文本消息、Hermes 提供的模型与编辑审批模式，以及 Hermes
+发起的 ACP 审批请求。恢复使用同一个原生会话，保留 AA 已保存的 Timeline，
+不会自动重投结果未知的消息；现有 Hermes 原生历史不会自动导入。
+当前不开放附件或斜杠命令目录，也不提供强制全部工具审批或只读沙箱。
+Hermes 自身的工具权限和本机配置仍然生效。
+
+此分支基于当前上游开发代码，Server、Connector 和客户端需要使用配套代码；
+ACP 功能的数据库迁移要求见 [ACP Runtime 实现](../docs/runtime-protocol/acp-runtime-implementation.md)。
